@@ -29,11 +29,12 @@ release caches remain immutable and may still exist locally or in GHCR.
 
 ## CI Deployment
 
-The [Documentation workflow](../.github/workflows/documentation.yml) runs for a
-semantic-version tag push or an explicit `workflow_dispatch` invocation. It
-always checks out `main` with complete tag history. This is intentional: the
-site's `main` entry must represent the development branch even when a tag was
-created from a maintenance branch.
+The [Documentation workflow](../.github/workflows/documentation.yml) runs after
+the unified release workflow publishes the release and updates the binary
+package. It also accepts an explicit `workflow_dispatch` invocation. It always
+checks out `main` with complete tag history. This is intentional: the site's
+`main` entry must represent the development branch even when a release comes
+from a maintenance branch.
 
 The workflow:
 
@@ -52,8 +53,10 @@ The workflow:
    Pages Actions.
 
 The repository's Pages source must be **GitHub Actions**. The `github-pages`
-environment must allow semantic-version tags and `main` for manual deployments,
-or have no branch and tag restriction.
+environment must allow branches `main` and `release/*` and version tags such as
+`0.22.0` for release deployments, plus any refs selected for manual documentation
+runs, or have no branch and tag restriction. A reusable documentation run keeps
+the release caller's ref even though the build checks out `main`.
 
 ## Local Versioned Preview
 
@@ -112,10 +115,12 @@ OCI cache remains an explicit CI operation.
 
 ## Release Preflight
 
-VersionedDocC discovers releases from Git tags. Before pushing a release, create
-the candidate tag locally at the reviewed commit, then run the versioned build
-from a clean checkout of `main`. The tag may point to a maintenance branch; the
-documentation checkout itself should remain on `main` so it matches CI.
+VersionedDocC discovers releases from Git tags. For an optional local release
+preview, create the candidate tag locally at the reviewed commit, then run the
+versioned build from a clean checkout of `main`. The tag may point to a maintenance branch; the
+documentation checkout itself should remain on `main` so it matches CI. Keep
+this preview tag local. Pushing it starts the release pipeline described in
+[Release.md](Release.md).
 
 ```bash
 RELEASE_VERSION=0.20.2
