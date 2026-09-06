@@ -20,6 +20,8 @@
         "value" : "$(PROJECT_DIR)\/ReferenceImages"
       }
     ],
+    "language" : "en",
+    "region" : "US",
     "targetForVariableExpansion" : {
       "containerPath" : "container:Example_Legacy.xcodeproj",
       "identifier" : "275751E22DEE1441003E467C",

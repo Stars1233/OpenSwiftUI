@@ -235,6 +235,11 @@ let testArguments = Arguments.arguments(
     ]
 )
 
+let testOptions = TestActionOptions.options(
+    language: "en",
+    region: "US"
+)
+
 let launchArguments = Arguments.arguments(
     environmentVariables: [
         "SWIFTUI_PRINT_TREE": .environmentVariable(value: "1", isEnabled: false),
@@ -366,7 +371,8 @@ func scheme(
                 testableTargets,
                 arguments: testArguments,
                 configuration: debugConfiguration,
-                expandVariableFromTarget: "TestingHost"
+                expandVariableFromTarget: "TestingHost",
+                options: testOptions
             )
             : nil,
         runAction: .runAction(
@@ -439,7 +445,8 @@ let schemes: [Scheme] = [
             [.testableTarget(target: "OpenSwiftUIUITests", parallelization: .enabled)],
             arguments: testArguments,
             configuration: openSwiftUIDebug,
-            expandVariableFromTarget: "TestingHost"
+            expandVariableFromTarget: "TestingHost",
+            options: testOptions
         ),
         analyzeAction: .analyzeAction(configuration: openSwiftUIDebug)
     ),
@@ -451,7 +458,8 @@ let schemes: [Scheme] = [
             [.testableTarget(target: "OpenSwiftUIUITests", parallelization: .enabled)],
             arguments: testArguments,
             configuration: swiftUIDebug,
-            expandVariableFromTarget: "TestingHost"
+            expandVariableFromTarget: "TestingHost",
+            options: testOptions
         ),
         analyzeAction: .analyzeAction(configuration: swiftUIDebug)
     ),
