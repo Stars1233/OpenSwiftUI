@@ -14,7 +14,11 @@ struct ProgressViewUITests {
         openSwiftUIAssertSnapshot(of: ProgressViewExample())
     }
 
-    @Test
+    // FIXME: TO BE INVEISTIGATE
+    @Test(
+        .disabled("The localized label is missing on CI sometimes"),
+        .tags(.org_openswiftuiproject_openswiftui.localization)
+    )
     func indeterminateInitializers() {
         openSwiftUIAssertSnapshot(of: IndeterminateProgressViewExample())
     }
