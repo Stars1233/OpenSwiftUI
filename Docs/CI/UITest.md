@@ -22,6 +22,7 @@ Manual workflow dispatch supports these inputs:
 - `platform`: `all`, `ios`, or `macos`.
 - `configuration`: `default`, `all`, `swiftui-renderer-ag`, `swiftui-renderer-iag`, `openswiftui-renderer-ag`, or `openswiftui-renderer-iag`.
 - `update_reference`: update CI reference images before running tests.
+- `only-testing`: optional `xcodebuild -only-testing` identifier. Leave it empty to run all UI tests.
 
 From the GitHub CLI:
 
@@ -39,14 +40,20 @@ Examples:
 gh workflow run uitests.yml --ref main -f platform=ios -f configuration=openswiftui-renderer-iag -f update_reference=false
 gh workflow run uitests.yml --ref main -f platform=macos -f configuration=all -f update_reference=false
 gh workflow run uitests.yml --ref main -f platform=all -f configuration=default -f update_reference=true
+gh workflow run uitests.yml --ref main -f platform=ios -f configuration=openswiftui-renderer-iag -f 'only-testing=OpenSwiftUIUITests/TextUITests/dateFormatStyleExample()'
+gh workflow run uitests.yml --ref main -f platform=ios -f configuration=openswiftui-renderer-iag -f 'only-testing=OpenSwiftUIUITests/TextUITests/dateFormatStyleExample()' -f update_reference=true
 ```
+
+The same test filter applies to SwiftUI reference recording and OpenSwiftUI verification. With `update_reference=true`, only the selected tests record reference images. Without it, the workflow uses existing references, or records them if the platform reference directory is empty.
+
+Use the full identifier `OpenSwiftUIUITests/<Suite>/<test>()` for a single Swift Testing test. Keep its case and the trailing `()`. A suite identifier such as `OpenSwiftUIUITests/TextUITests` is also supported. Selection does not enable disabled tests. A selected run fails if no tests execute, including when all selected tests are skipped.
 
 ## Pull Request Comments
 
 Trusted PR commenters can request UI tests with:
 
 ```text
-/uitest [platform] [configuration] [update]
+/uitest [platform] [configuration] [update] [only-testing=<identifier>]
 ```
 
 Examples:
@@ -58,6 +65,8 @@ Examples:
 /uitest all all-configs
 /uitest ios config=openswiftui-renderer-iag
 /uitest macos update osui-ag
+/uitest ios osui-iag only-testing=OpenSwiftUIUITests/TextUITests/dateFormatStyleExample()
+/uitest ios osui-iag update only-testing=OpenSwiftUIUITests/TextUITests/dateFormatStyleExample()
 ```
 
 The comment command accepts `all`, `ios`, or `macos` as the platform. For configurations, it accepts the workflow configuration names above plus these aliases:
@@ -71,3 +80,5 @@ The comment command accepts `all`, `ios`, or `macos` as the platform. For config
 | `osui-iag` | `openswiftui-renderer-iag` |
 
 When the command is accepted on a same-repository PR, the workflow creates commit statuses named `UI Tests / iOS / <configuration>` and `UI Tests / macOS / <configuration>` for the requested matrix.
+
+Selected runs append ` / Selected` to the status context so they do not replace full-suite results.

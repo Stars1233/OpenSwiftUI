@@ -23,6 +23,10 @@ inputs:
     description: 'Force updating reference images before running UI tests'
     required: false
     default: 'false'
+  only-testing:
+    description: 'Optional xcodebuild -only-testing identifier, shared by recording and verification'
+    required: false
+    default: ''
   compute:
     description: 'Generate the Example project with the Compute backend'
     required: false
@@ -171,9 +175,15 @@ runs:
       if: steps.reference.outputs.needs-record == 'true'
       continue-on-error: true
       shell: bash
+      env:
+        UITEST_ONLY_TESTING: ${{ inputs.only-testing }}
       run: |
         source Scripts/Tuist/common.sh
         cd Example
+        test_arguments=()
+        if [[ -n "$UITEST_ONLY_TESTING" ]]; then
+          test_arguments+=("-only-testing:$UITEST_ONLY_TESTING")
+        fi
         snapshot_reference_platform_dir="${{ steps.reference.outputs.platform-directory }}"
         snapshot_reference_dir="${{ steps.reference.outputs.directory }}"
         lockfile="${{ steps.reference.outputs.lockfile }}"
@@ -248,7 +258,12 @@ runs:
           -skipMacroValidation \
           -skipPackagePluginValidation \
           -derivedDataPath "${{ steps.build-directory.outputs.derived-data-path }}" \
+          "${test_arguments[@]}" \
           2>&1 || record_status=$?
+
+        if [[ -n "$UITEST_ONLY_TESTING" ]]; then
+          bash ../Scripts/CI/check_uitest_selection.sh "$baseline_result_bundle" "$UITEST_ONLY_TESTING"
+        fi
 
         if [[ "$record_status" -ne 0 ]]; then
           echo "SwiftUI baseline recording exited with status $record_status; continuing if reference images were written."
@@ -283,9 +298,15 @@ runs:
       id: uitest
       continue-on-error: true
       shell: bash
+      env:
+        UITEST_ONLY_TESTING: ${{ inputs.only-testing }}
       run: |
         source Scripts/Tuist/common.sh
         cd Example
+        test_arguments=()
+        if [[ -n "$UITEST_ONLY_TESTING" ]]; then
+          test_arguments+=("-only-testing:$UITEST_ONLY_TESTING")
+        fi
         uitest_tmp="${RUNNER_TEMP:-/tmp}/uitests-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT:-0}-${{ inputs.artifact-name }}"
         rm -rf "$uitest_tmp"
         mkdir -p "$uitest_tmp/artifacts"
@@ -304,7 +325,12 @@ runs:
           -skipMacroValidation \
           -skipPackagePluginValidation \
           -derivedDataPath "${{ steps.build-directory.outputs.derived-data-path }}" \
+          "${test_arguments[@]}" \
           2>&1 | tee "$test_log"
+
+        if [[ -n "$UITEST_ONLY_TESTING" ]]; then
+          bash ../Scripts/CI/check_uitest_selection.sh "$result_bundle" "$UITEST_ONLY_TESTING" 2>&1 | tee -a "$test_log"
+        fi
 
     - name: Collect failed snapshots
       if: steps.uitest.outcome == 'failure'
